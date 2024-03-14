@@ -1,17 +1,29 @@
 import torch
 import matplotlib.pyplot as plt
 import os
-
+import torch.nn as nn
 
 # save the model
 def save_model(model, filename):
+    # ex. filename = 'visa_capsules.pt'
+    cwd = os.getcwd()
+    model_path = os.path.join(cwd, 'models')
+    if not os.path.exists(model_path):
+        os.makedirs(model_path)
+    filename = os.path.join(model_path, filename)
     torch.save(model.state_dict(), filename)
 
 
 # load the model
 def load_model(model, filename):
-    model.load_state_dict(torch.load(filename))
+    # ex. filename = 'visa_capsules.pt'
+    if type(model) != nn.DataParallel:
+        if torch.cuda.device_count() > 1:
+            model = nn.DataParallel(model)
+    model_path = os.path.join(os.getcwd(), 'models', filename)
+    model.load_state_dict(torch.load(model_path))
     return model
+
 
 
 # save heatmap on top of the image
