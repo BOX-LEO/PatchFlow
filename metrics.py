@@ -9,6 +9,10 @@ import time
 
 def image_AUROC(model, test_loader):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    if type(model) != nn.DataParallel:
+        if torch.cuda.device_count() > 1:
+            model = nn.DataParallel(model)
+
     model.to(device)
     model.eval()
     im_auroc = AUROC(task='binary')
@@ -19,8 +23,8 @@ def image_AUROC(model, test_loader):
         # reshape the anomaly_maps and get the maximum value
         anomaly_maps = anomaly_maps.view(anomaly_maps.shape[0], -1)
         anomaly_scores = torch.max(anomaly_maps, dim=-1).values
-        print(anomaly_scores)
-        print(target)
+        # print(anomaly_scores)
+        # print(target)
         im_auroc.update(anomaly_scores, target)
 
     print('Image AUROC: {:.6f}'.format(im_auroc.compute()))
@@ -28,19 +32,20 @@ def image_AUROC(model, test_loader):
 
 
 
-def pixel_AUROC(model, test_loader, mask_loader):
+def pixel_AUROC(model, test_image_loader, mask_loader):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    if torch.cuda.device_count() > 1:
-        model = nn.DataParallel(model)
+    if type(model) != nn.DataParallel:
+        if torch.cuda.device_count() > 1:
+            model = nn.DataParallel(model)
+
     model.to(device)
     model.eval()
     pixel_auroc = AUROC(task='binary')
 
-    for (data, target),(mask,_) in zip(test_loader,mask_loader):
+    for (data, _),(mask,_) in zip(test_image_loader,mask_loader):
         # get the data with target == 1
 
-
-        data, target = data.to(device), target.to(device)
+        data = data.to(device)
         mask = mask.to(device)
         anomaly_maps = model(data)
         # match the shape of anomaly_maps to mask
@@ -53,8 +58,8 @@ def pixel_AUROC(model, test_loader, mask_loader):
         # mask = mask.view(-1)
         # anomaly_maps = anomaly_maps.view(-1)
 
-        print(mask.shape)
-        print(anomaly_maps.shape)
+        # print(mask.shape)
+        # print(anomaly_maps.shape)
 
         # anomaly_maps= anomaly_maps.view(anomaly_maps.shape[0], -1)
         # mask = mask.view(mask.shape[0], -1)
@@ -62,7 +67,7 @@ def pixel_AUROC(model, test_loader, mask_loader):
 
 
     print('Pixel AUROC: {:.6f}'.format(pixel_auroc.compute()))
-    # return pixel_auroc.compute().item()
+    return pixel_auroc.compute()
 
 
 
@@ -153,7 +158,8 @@ def pixel_AUPRO(anomaly_maps, mask):
         fpr = np.logical_and(gt_masks_neg, binary_score_maps).sum() / gt_masks_neg.sum()
         fprs.append(fpr)
         threds.append(thred)
-        print('Step: {} Time: {:.6f}'.format(step, time.time() - start))
+        if step % 50 == 0:
+            print('Step: {} Time: {:.6f}'.format(step, time.time() - start))
     # as array
     # threds = np.array(threds)
     pros_mean = np.array(pros_mean)
