@@ -14,6 +14,8 @@ trans = transforms.Compose([
 
 mask_trans = transforms.Compose([transforms.Grayscale(), transforms.ToTensor()])
 
+eval_trans = transforms.Compose([transforms.Resize((768, 768)), transforms.ToTensor()])
+
 # datapath = '/home/dao2/defect_detection/VisA/visa_pytorch'
 # category = 'capsules'
 #
@@ -67,5 +69,16 @@ def get_validation_dataset(datapath, category, batch_size=16, data_name='mvtec')
     mask_loader = DataLoader(mask_dataset, batch_size=batch_size, shuffle=False)
     return image_loader, mask_loader
 
+
+def get_evaluation_dataset(datapath, category, batch_size=16, data_name='mvtec'):
+    assert data_name in ['mvtec', 'visa']
+    assert category in os.listdir(datapath)
+    test_path = os.path.join(datapath, category, 'test')
+    assert 'good' in os.listdir(test_path)
+    test_dataset = datasets.ImageFolder(test_path, transform=eval_trans)
+    idx = [i for i in range(len(test_dataset)) if test_dataset.imgs[i][1] != test_dataset.class_to_idx['good']]
+    test_dataset = torch.utils.data.Subset(test_dataset, idx)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    return test_loader
 
 
