@@ -8,10 +8,10 @@ from torch import Tensor, nn
 class AnomalyMap(nn.Module):
     """Generate Anomaly Heatmap."""
 
-    def __init__(self, input_size: ListConfig | tuple) -> None:
+    def __init__(self, input_size: ListConfig | tuple,crop_size=None) -> None:
         super().__init__()
         self.input_size = input_size if isinstance(input_size, tuple) else tuple(input_size)
-        self.crop_size = tuple([int(self.input_size[0] * 0.875), int(self.input_size[1] * 0.875)])
+        self.crop_size = crop_size
 
 
     def forward(self, hidden_variables: Tensor) -> Tensor:
@@ -29,9 +29,17 @@ class AnomalyMap(nn.Module):
         prob = torch.exp(log_prob)
         anomaly_map = F.interpolate(
             input=-prob,
-            size=self.input_size,
+            size=self.crop_size,
             mode="bilinear",
             align_corners=True,
         )
+        min_value = torch.min(anomaly_map)
+        if self.crop_size:
+
+            # pad -1 to make it input_size
+            anomaly_map=nn.ConstantPad2d((int((self.input_size[0] - self.crop_size[0]) / 2)), -1)(anomaly_map)
 
         return anomaly_map
+
+
+
