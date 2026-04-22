@@ -2,7 +2,7 @@
 
 Official implementation of [**PatchFlow: Leveraging a Flow-Based Model with Patch Features**](https://arxiv.org/abs/2602.05238).
 
-PatchFlow is also integrated into [**Anomalib**](https://github.com/open-edge-platform/anomalib/tree/feature/model/patchflow), with support for both **DINOv2** and **EfficientNet** backbones.
+PatchFlow is also integrated into [**Anomalib**](https://github.com/open-edge-platform/anomalib/tree/release/lib/v2.4.0), with support for both **DINOv2** and **EfficientNet** backbones.
 
 PatchFlow is an anomaly detection method for industrial product images. It combines local neighbor-aware patch features with a normalizing flow model, and closes the gap between a generic pretrained feature extractor and industrial imagery via a lightweight feature adapter.
 
