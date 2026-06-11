@@ -1,25 +1,31 @@
 from utils import *
 from train import train_model
 from model import PatchflowModel
-from data import get_dataset, get_dataloader
-from evaluate import image_auroc, pixel_AUROC
+from data import get_dataset, get_mask_dataset
+from metrics import image_AUROC, pixel_AUROC
 
 
 input_size = (768, 768)
 
-datapath = '/home/dao2/defect_detection/VisA/visa_pytorch'
-category = 'capsules'
+datapath = '/home/aivision/Documents/PatchFlow-main/'
+category = 'bottle'
+data_name = 'mvtec'
+batch_size = 16
+epoch = 10
 
-train_dataset, test_dataset, mask_dataset = get_dataset(datapath,category)
-train_loader, test_loader, mask_loader = get_dataloader(train_dataset, test_dataset, batch_size=16)
+# training images + image-level test images
+train_loader, test_loader = get_dataset(datapath, category, batch_size=batch_size, data_name=data_name)
+# ground-truth masks + the matching anomalous test images (used for validation)
+mask_loader, mask_image_loader = get_mask_dataset(datapath, category, batch_size=batch_size, data_name=data_name)
 
 model = PatchflowModel(input_size, scale=3, flow_feature_dim=128, flow_steps=1)
-#
-# model = train_model(model, train_loader, 10)
-# save_model(model, 'patchflow.pt')
 
-model = load_model(model, 'patchflow.pt')
+# train_model validates each epoch and saves the best checkpoint, returning its path
+best_model_path = train_model(model, train_loader, mask_image_loader, mask_loader, epoch,
+                              data_name=data_name, category=category)
+print('Best model saved to:', best_model_path)
 
-
-image_auroc(model, test_loader)
-
+# Evaluate the best model
+model = load_model(model, best_model_path)
+image_AUROC(model, test_loader)
+pixel_AUROC(model, mask_image_loader, mask_loader)

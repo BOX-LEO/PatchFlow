@@ -1,0 +1,17 @@
+torch
+torchvision
+torchmetrics
+timm
+FrEIA
+efficientnet_pytorch
+numpy
+pandas
+opencv-python
+Pillow
+scikit-image
+scikit-learn
+imgaug
+omegaconf
+einops
+matplotlib
+tqdm

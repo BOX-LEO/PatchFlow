@@ -5,6 +5,7 @@ from skimage.measure import label, regionprops
 from sklearn.metrics import auc
 import torch.nn as nn
 import time
+from tqdm import tqdm
 
 
 def image_AUROC(model, test_loader):
@@ -17,7 +18,7 @@ def image_AUROC(model, test_loader):
     model.eval()
     im_auroc = AUROC(task='binary')
 
-    for batch_idx, (data, target) in enumerate(test_loader):
+    for data, target in tqdm(test_loader, desc='Image AUROC'):
         data, target = data.to(device), target.to(device)
         anomaly_maps = model(data)
         # reshape the anomaly_maps and get the maximum value
@@ -42,7 +43,9 @@ def pixel_AUROC(model, test_image_loader, mask_loader):
     model.eval()
     pixel_auroc = AUROC(task='binary')
 
-    for (data, _),(mask,_) in zip(test_image_loader,mask_loader):
+    for (data, _),(mask,_) in tqdm(zip(test_image_loader, mask_loader),
+                                   total=min(len(test_image_loader), len(mask_loader)),
+                                   desc='Pixel AUROC'):
         # get the data with target == 1
 
         data = data.to(device)

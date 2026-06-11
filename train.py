@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import time
+from tqdm import tqdm
 from loss import Loss
 from metrics import image_AUROC, pixel_AUROC
 from utils import save_model
@@ -20,7 +21,8 @@ def train_model(model, train_loader, val_image_loader, val_mask_loader, epoch, d
     for i in range(epoch):
         model.train()
         train_loss = 0
-        for batch_idx, (data, target) in enumerate(train_loader):
+        pbar = tqdm(train_loader, desc='Epoch {}/{}'.format(i + 1, epoch), leave=False)
+        for data, target in pbar:
             data, target = data.to(device), target.to(device)
             optimizer.zero_grad()
             z_dist, jacobians = model(data)
@@ -28,6 +30,7 @@ def train_model(model, train_loader, val_image_loader, val_mask_loader, epoch, d
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
+            pbar.set_postfix(loss=loss.item())
         print('Epoch: {} Loss: {:.6f}'.format(i, train_loss / len(train_loader.dataset)))
 
         # validation
