@@ -33,9 +33,15 @@ def train_model(model, train_loader, val_image_loader, val_mask_loader, epoch, d
             pbar.set_postfix(loss=loss.item())
         print('Epoch: {} Loss: {:.6f}'.format(i, train_loss / len(train_loader.dataset)))
 
+        # free cached training activations before validation to avoid OOM
+        torch.cuda.empty_cache()
+
         # validation
         model.eval()
         pa = pixel_AUROC(model, val_image_loader, val_mask_loader)
+
+        # release validation memory before the next training epoch
+        torch.cuda.empty_cache()
         if pa > max_pixel_auroc:
             max_pixel_auroc = pa
             output = 'model_{}_{}.pt'.format(data_name, category)

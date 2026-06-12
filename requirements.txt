@@ -1,5 +1,5 @@
-torch
-torchvision
+# NOTE: torch and torchvision are installed separately in setup_env.sh
+# (CUDA 12.1 wheels) so they match the GPU driver. Do not add them here.
 torchmetrics
 timm
 FrEIA

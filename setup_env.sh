@@ -12,6 +12,10 @@ set -e
 
 ENV_NAME="${ENV_NAME:-patchflow}"
 PY_VERSION="${PY_VERSION:-3.10}"
+# CUDA wheel tag for torch. The system GPU driver supports up to CUDA 12.2,
+# so cu121 wheels are used by default. Set CUDA_TAG=cpu for a CPU-only build,
+# or e.g. CUDA_TAG=cu118 to match an older driver.
+CUDA_TAG="${CUDA_TAG:-cu121}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -31,8 +35,14 @@ conda activate "${ENV_NAME}"
 echo ">>> Upgrading pip..."
 pip install --upgrade pip
 
-echo ">>> Installing dependencies from requirements.txt..."
+echo ">>> Installing torch + torchvision (${CUDA_TAG}) to match the GPU driver..."
+pip install torch torchvision --index-url "https://download.pytorch.org/whl/${CUDA_TAG}"
+
+echo ">>> Installing remaining dependencies from requirements.txt..."
 pip install -r "${SCRIPT_DIR}/requirements.txt"
+
+echo ">>> Verifying CUDA availability..."
+python -c "import torch; print('torch', torch.__version__, '| CUDA available:', torch.cuda.is_available())"
 
 echo ""
 echo ">>> Done. Activate the environment with:"

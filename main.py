@@ -10,8 +10,8 @@ input_size = (768, 768)
 datapath = '/home/aivision/Documents/PatchFlow-main/'
 category = 'bottle'
 data_name = 'mvtec'
-batch_size = 16
-epoch = 10
+batch_size = 8
+epoch = 1
 
 # training images + image-level test images
 train_loader, test_loader = get_dataset(datapath, category, batch_size=batch_size, data_name=data_name)

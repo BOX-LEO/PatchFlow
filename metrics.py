@@ -20,7 +20,8 @@ def image_AUROC(model, test_loader):
 
     for data, target in tqdm(test_loader, desc='Image AUROC'):
         data, target = data.to(device), target.to(device)
-        anomaly_maps = model(data)
+        with torch.no_grad():
+            anomaly_maps = model(data)
         # reshape the anomaly_maps and get the maximum value
         anomaly_maps = anomaly_maps.view(anomaly_maps.shape[0], -1)
         anomaly_scores = torch.max(anomaly_maps, dim=-1).values
@@ -50,7 +51,8 @@ def pixel_AUROC(model, test_image_loader, mask_loader):
 
         data = data.to(device)
         mask = mask.to(device)
-        anomaly_maps = model(data)
+        with torch.no_grad():
+            anomaly_maps = model(data)
         # match the shape of anomaly_maps to mask
         # get the shape of mask
         H, W = mask.shape[-2:]
